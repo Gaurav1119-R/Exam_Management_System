@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.id %}Edit{% else %}Create{% endif %} Question Paper{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-alt"></i>
+                        {% if form.instance.id %}Edit Question Paper{% else %}Create New Question Paper{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">
+                                <i class="fas fa-heading"></i> Title
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.subject.id_for_label }}" class="form-label">
+                                <i class="fas fa-book"></i> Subject
+                            </label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                                <div class="invalid-feedback d-block">{{ form.subject.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Select the subject for this paper. Questions are recommended to belong to the same subject.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-list"></i> Questions</label>
+                            {{ form.questions }}
+                            {% if form.questions.errors %}
+                                <div class="invalid-feedback d-block">{{ form.questions.errors }}</div>
+                            {% endif %}
+                            <small id="questionsFilterNote" class="form-text text-muted">Select a subject to filter questions.</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.total_marks.id_for_label }}" class="form-label">
+                                    <i class="fas fa-star"></i> Total Marks
+                                </label>
+                                {{ form.total_marks }}
+                                {% if form.total_marks.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.total_marks.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.duration_minutes.id_for_label }}" class="form-label">
+                                    <i class="fas fa-clock"></i> Duration (minutes)
+                                </label>
+                                {{ form.duration_minutes }}
+                                {% if form.duration_minutes.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.duration_minutes.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.passing_marks.id_for_label }}" class="form-label">
+                                    <i class="fas fa-check-circle"></i> Passing Marks
+                                </label>
+                                {{ form.passing_marks }}
+                                {% if form.passing_marks.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.passing_marks.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.instructions.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left"></i> Instructions
+                            </label>
+                            {{ form.instructions }}
+                            {% if form.instructions.errors %}
+                                <div class="invalid-feedback d-block">{{ form.instructions.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+
+                        <div class="btn-group w-100" role="group">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> {% if form.instance.id %}Update{% else %}Create{% endif %} Paper
+                            </button>
+                            <a href="{% url 'exams:admin:paper_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Map question id to subject id for client-side filtering
+const questionSubjects = {
+    {% for q in all_questions %}
+    "{{ q.id }}": "{{ q.subject_id }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+function filterQuestionsBySubject() {
+    const subjectSelect = document.getElementById('id_subject');
+    const selected = subjectSelect ? subjectSelect.value : '';
+    const container = document.querySelector('#id_questions');
+    const inputs = container ? container.querySelectorAll('input[type="checkbox"]') : [];
+
+    inputs.forEach(function(inp) {
+        const qid = inp.value;
+        const subjectId = questionSubjects[qid];
+        const li = inp.closest('li') || inp.parentElement;
+        if (!selected || subjectId === selected) {
+            if (li) li.style.display = '';
+            inp.disabled = false;
+        } else {
+            if (li) li.style.display = 'none';
+            inp.checked = false;
+            inp.disabled = true;
+        }
+    });
+
+    const note = document.getElementById('questionsFilterNote');
+    if (note) {
+        if (selected) {
+            note.textContent = 'Showing questions for selected subject.';
+        } else {
+            note.textContent = 'Select a subject to filter questions.';
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const subjectSelect = document.getElementById('id_subject');
+    if (subjectSelect) {
+        subjectSelect.addEventListener('change', filterQuestionsBySubject);
+    }
+    filterQuestionsBySubject();
+});
+</script>
+
+{% endblock %}

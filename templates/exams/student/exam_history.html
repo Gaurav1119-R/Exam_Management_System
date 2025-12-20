@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block title %}Academic Report — Exam History{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root { --primary: #4361ee; --success: #06d6a0; --bg-main: #f8faff; }
+    .glass-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px 0 rgba(31,38,135,0.05); transition: transform .3s ease, box-shadow .3s ease; }
+    .glass-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px 0 rgba(31,38,135,0.08); }
+    .progress-fill { transition: width 1.5s cubic-bezier(0.1,0.5,0.5,1); }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+    /* Hide left sidebar for the exam history page */
+    .sidebar-gradient { display: none !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-lg-row gap-4">
+    <aside class="w-72 sidebar-gradient text-white d-none d-lg-flex flex-column p-4">
+        <div class="flex items-center gap-3 mb-4 px-2">
+            <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            </div>
+            <span class="text-xl font-bold tracking-tight">ExamSystem</span>
+        </div>
+
+        <nav class="flex-1 space-y-2">
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">Dashboard</a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 font-semibold">Performance</a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">Results</a>
+        </nav>
+
+        <div class="pt-6 border-t border-slate-800">
+            <a href="{% url 'logout' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 transition">Logout</a>
+        </div>
+    </aside>
+
+    <div class="flex-1 p-6 md:p-12 overflow-y-auto">
+
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Academic Report</h1>
+                <p class="text-slate-500 font-medium">Tracking your growth and examination metrics.</p>
+            </div>
+            <div class="flex gap-3">
+                <button class="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-slate-50 transition">Share</button>
+                <button class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition">Print PDF</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-12 gap-8 mb-10">
+            
+            <div class="col-span-12 lg:col-span-4 glass-card rounded-[2rem] p-8 flex flex-col items-center justify-center">
+                <h3 class="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-8">Overall Standing</h3>
+                <div class="relative w-52 h-52">
+                    <canvas id="scoreChart"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-5xl font-black text-slate-800 tracking-tighter">{{ overall_score|default:"84.2" }}%</span>
+                        <div class="mt-1 px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider">Top 5%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+                    
+                    {% with cards=cards_data|default:"Exams,88,indigo Projects,72,emerald Attendance,95,amber" %}
+                    <div class="glass-card rounded-3xl p-6 flex flex-col justify-between">
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3a1 1 0 10-2 0M15 3a1 1 0 10-2 0M18 5v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm font-semibold">Average Exam</p>
+                            <h3 class="text-3xl font-bold text-slate-800">{{ exam_score|default:"88" }}%</h3>
+                            <div class="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="progress-fill h-full bg-indigo-500 rounded-full" style="width: {{ exam_score|default:'88' }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-3xl p-6 flex flex-col justify-between border-emerald-100">
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm font-semibold">Project Avg</p>
+                            <h3 class="text-3xl font-bold text-slate-800">{{ project_score|default:"72" }}%</h3>
+                            <div class="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="progress-fill h-full bg-emerald-500 rounded-full" style="width: {{ project_score|default:'72' }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-3xl p-6 flex flex-col justify-between border-amber-100">
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm font-semibold">Attendance</p>
+                            <h3 class="text-3xl font-bold text-slate-800">{{ attendance|default:"95" }}%</h3>
+                            <div class="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="progress-fill h-full bg-amber-500 rounded-full" style="width: {{ attendance|default:'95' }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-[2rem] overflow-hidden">
+            <div class="p-8 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-slate-800">Exam History</h3>
+                <span class="text-slate-400 text-sm font-medium">Updated 2 hours ago</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50/50">
+                        <tr class="text-left text-slate-400 text-[11px] font-bold uppercase tracking-[0.1em]">
+                            <th class="px-8 py-5">Subject</th>
+                            <th class="px-8 py-5">Performance</th>
+                            <th class="px-8 py-5">Grade</th>
+                            <th class="px-8 py-5">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for result in results %}
+                        <tr class="hover:bg-indigo-50/30 transition-colors group">
+                            <td class="px-8 py-5">
+                                <div class="font-bold text-slate-700">{{ result.exam_schedule.question_paper.subject.name|default:"Database Systems" }}</div>
+                                <div class="text-xs text-slate-400">{{ result.exam_schedule.question_paper.title|default:"Term 1 Final" }}</div>
+                            </td>
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-bold text-slate-600">{{ result.percentage|default:"92" }}%</span>
+                                    <div class="flex-1 w-24 h-1.5 bg-slate-100 rounded-full">
+                                        <div class="h-full bg-indigo-500 rounded-full" style="width: {{ result.percentage|default:'92' }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 font-bold text-slate-700 underline decoration-indigo-200 underline-offset-4">
+                                {% with perc=result.percentage|default:0 %}
+                                    {% if perc >= 90 %}A+{% elif perc >= 80 %}A{% elif perc >= 70 %}B{% else %}C{% endif %}
+                                {% endwith %}
+                            </td>
+                            <td class="px-8 py-5">
+                                <span class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-tight border border-emerald-100">{{ result.get_status_display|default:"Distinction" }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-8 py-5 text-center text-slate-500">No exam history available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctxEl = document.getElementById('scoreChart');
+    if (!ctxEl) return;
+    const ctx = ctxEl.getContext('2d');
+    const score = {{ overall_score|default:"84.2" }};
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, '#4361ee');
+    gradient.addColorStop(1, '#4cc9f0');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [score, 100 - score],
+                backgroundColor: [gradient, '#f1f5f9'],
+                borderWidth: 0,
+                borderRadius: 20,
+                cutout: '85%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            animation: { duration: 2000, easing: 'easeOutQuart' }
+        }
+    });
+});
+</script>
+{% endblock %}
