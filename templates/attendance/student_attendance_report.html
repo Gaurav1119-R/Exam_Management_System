@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f4f7fe;
+            --card-radius: 12px;
+            --text-muted: #8a92a6;
+            --primary-blue: #5d87ff;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            color: #2a3547;
+            margin-bottom: 20px;
+        }
+
+        /* Insight Card Styling */
+        .insight-card {
+            background: #fff;
+            border: none;
+            border-radius: var(--card-radius);
+            padding: 20px;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2a3547;
+            margin-bottom: 2px;
+        }
+
+        .month-label {
+            font-size: 0.75rem;
+            color: var(--primary-blue);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-top: 10px;
+            color: #2a3547;
+        }
+
+        /* Mini Graph Placeholders (Wavy lines) */
+        .graph-container {
+            width: 100px;
+            height: 50px;
+            position: absolute;
+            right: 15px;
+            bottom: 40px;
+        }
+
+        .wave-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Comparison Footer */
+        .comparison {
+            font-size: 0.75rem;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .neg { color: #fa896b; font-weight: bold; }
+        .pos { color: #13deb9; font-weight: bold; }
+
+        /* Punch-In Button Style */
+        .btn-punch {
+            background: linear-gradient(90deg, #7ed321 0%, #5cb85c 100%);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <h4 class="section-title">Attendance Report</h4>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="insight-card shadow-sm">
+                <div class="card-label">Present Percentage</div>
+                <div class="month-label">Overall</div>
+                <div class="stat-value">{{ present_percentage|floatformat:1 }}%</div>
+                
+                <div class="graph-container">
+                    <svg class="wave-svg" viewBox="0 0 100 50">
+                        <path d="M0 40 Q 25 10 50 30 T 100 10 V 50 H 0 Z" fill="rgba(126, 211, 33, 0.12)" stroke="#7ed321" stroke-width="2"/>
+                    </svg>
+                </div>
+                
+                <div class="comparison">
+                    <span class="pos">📈 {{ present_percentage|floatformat:1 }}%</span> <span class="text-muted">Present</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="insight-card shadow-sm">
+                <div class="card-label">Absent Percentage</div>
+                <div class="month-label">Overall</div>
+                <div class="stat-value">{{ absent_percentage|floatformat:1 }}%</div>
+                
+                <div class="graph-container">
+                    <svg class="wave-svg" viewBox="0 0 100 50">
+                        <path d="M0 30 Q 25 50 50 20 T 100 40 V 50 H 0 Z" fill="rgba(250, 137, 107, 0.12)" stroke="#fa896b" stroke-width="2"/>
+                    </svg>
+                </div>
+
+                <div class="comparison">
+                    <span class="neg">📉 {{ absent_percentage|floatformat:1 }}%</span> <span class="text-muted">Absent</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="insight-card shadow-sm">
+                <div class="card-label">Total Exams</div>
+                <div class="month-label">Assigned</div>
+                <div class="stat-value" style="font-size: 1.1rem;">
+                    {{ total_exams }}
+                </div>
+                
+                <div class="graph-container">
+                    <svg class="wave-svg" viewBox="0 0 100 50">
+                        <path d="M0 45 Q 20 15 40 35 T 80 15 T 100 30 V 50 H 0 Z" fill="rgba(0, 185, 255, 0.12)" stroke="#00b9ff" stroke-width="2"/>
+                    </svg>
+                </div>
+
+                <div class="comparison">
+                    <span class="pos">✔ {{ present_count }}</span> <span class="text-muted">Present</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-5">
+        <h4 class="section-title">Attendance</h4>
+        <a href="{% url 'exams:student:dashboard' %}" class="btn btn-sm btn-outline-secondary">&larr; Back to Dashboard</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="insight-card shadow-sm text-center">
+                <h6 class="mb-2">Overall Attendance</h6>
+                <div style="font-size:48px;font-weight:800;color:#2a3547">{{ attendance_percentage|floatformat:1 }}%</div>
+                <p class="text-muted">Present: <strong>{{ present_count }}</strong> &middot; Absent: <strong>{{ absent_count }}</strong></p>
+                <div class="progress mt-3" style="height:12px;border-radius:8px;overflow:hidden;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ attendance_percentage }}%;" aria-valuenow="{{ attendance_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                    <a href="{% url 'attendance:student_report' %}?filter=last30" class="btn btn-sm btn-outline-primary{% if filter_type == 'last30' %} active{% endif %}">Last 30 days</a>
+                    <a href="{% url 'attendance:student_report' %}?filter=term" class="btn btn-sm btn-outline-primary{% if filter_type == 'term' %} active{% endif %}">This term</a>
+                    <a href="{% url 'attendance:student_report' %}" class="btn btn-sm btn-outline-primary{% if filter_type == 'all' %} active{% endif %}">All</a>
+                </div>
+                <div class="mt-2">
+                    <a href="{% url 'attendance:student_report_export' %}?filter={{ filter_type }}" class="btn btn-sm btn-primary">Export CSV</a>
+                </div>
+            </div>
+        </div>
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Date</th>
+                                <th>Subject</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in attendance_rows %}
+                                <tr>
+                                    <td>{{ row.date|date:"M d, Y" }}</td>
+                                    <td>{{ row.subject }}</td>
+                                    <td>{{ row.time_range }}</td>
+                                    <td>
+                                        {% if row.attended %}
+                                            <span class="badge bg-success">Present</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Absent</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="4" class="text-muted">No attendance records available.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if has_month_data %}
+(function(){
+    const labels = {{ month_labels|safe }};
+    const data = {{ present_values|safe }};
+
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Present',
+                data: data,
+                backgroundColor: 'rgba(93,135,255,0.8)'
+            }, {
+                label: 'Total',
+                data: {{ total_values|safe }},
+                backgroundColor: 'rgba(0,185,255,0.3)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+})();
+{% endif %}
+</script>
+
+</body>
+</html>
