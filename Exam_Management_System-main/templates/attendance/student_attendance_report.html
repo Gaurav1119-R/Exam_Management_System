@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Report - ExamHub{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --secondary: #8b5cf6;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --light-bg: #f8fafc;
+    --border-light: #e2e8f0;
+  }
+
+  .attendance-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    padding: 40px 20px;
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .attendance-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    animation: fadeInUp 0.6s ease-out 0.1s both;
+  }
+
+  .attendance-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+  }
+
+  .back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .back-button:hover {
+    background: rgba(99, 102, 241, 0.2);
+    transform: translateX(-4px);
+    color: var(--primary-dark);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .stat-card:nth-child(1) { animation-delay: 0.15s; }
+  .stat-card:nth-child(2) { animation-delay: 0.2s; }
+  .stat-card:nth-child(3) { animation-delay: 0.25s; }
+
+  .stat-card:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 24px 72px rgba(99, 102, 241, 0.12);
+    transform: translateY(-4px);
+  }
+
+  .stat-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+  }
+
+  .stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
+
+  .stat-meta {
+    font-size: 13px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  .main-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+  }
+
+  .card-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .overall-attendance {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .overall-value {
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  .overall-meta {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+
+  .progress-bar-custom {
+    height: 12px;
+    background: var(--light-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 8px;
+    transition: width 0.6s ease;
+  }
+
+  .filter-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+  .filter-btn {
+    padding: 10px 18px;
+    background: var(--light-bg);
+    color: var(--primary);
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .filter-btn:hover {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+  }
+
+  .filter-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border-color: transparent;
+  }
+
+  .export-btn {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  }
+
+  .table-container {
+    overflow-x: auto;
+    margin-top: 32px;
+  }
+
+  .attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .attendance-table thead {
+    border-bottom: 2px solid var(--border-light);
+    background: var(--light-bg);
+  }
+
+  .attendance-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .attendance-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 14px;
+    color: #1e293b;
+  }
+
+  .attendance-table tbody tr {
+    transition: all 0.3s ease;
+  }
+
+  .attendance-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.03);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .status-present {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+  }
+
+  .status-absent {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  .empty-state-text {
+    font-size: 16px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .attendance-container {
+      padding: 20px 12px;
+    }
+
+    .attendance-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .attendance-header h1 {
+      font-size: 24px;
+    }
+
+    .main-card {
+      padding: 24px;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .overall-value {
+      font-size: 42px;
+    }
+
+    .filter-buttons {
+      flex-direction: column;
+    }
+
+    .filter-btn,
+    .export-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .attendance-table {
+      font-size: 12px;
+    }
+
+    .attendance-table th,
+    .attendance-table td {
+      padding: 12px 8px;
+    }
+  }
+</style>
+
+<div class="attendance-container">
+  <div class="attendance-header">
+    <h1>Attendance Report</h1>
+    <a href="{% url 'exams:student:dashboard' %}" class="back-button">
+      <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">
+        <i class="bi bi-check-circle"></i> Present Percentage
+      </div>
+      <div class="stat-value">{{ present_percentage|floatformat:1 }}%</div>
+      <div class="stat-meta">
+        <span class="stat-badge">Overall</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <i class="bi bi-x-circle"></i> Absent Percentage
+      </div>
+      <div class="stat-value">{{ absent_percentage|floatformat:1 }}%</div>
+      <div class="stat-meta">
+        <span class="stat-badge">Overall</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <i class="bi bi-list-check"></i> Total Exams
+      </div>
+      <div class="stat-value">{{ total_exams }}</div>
+      <div class="stat-meta">
+        <span class="stat-badge">Assigned</span> • <strong>{{ present_count }}</strong> Present
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Attendance Card -->
+  <div class="main-card">
+    <div class="card-section-title">
+      <i class="bi bi-graph-up"></i> Overall Attendance
+    </div>
+
+    <div class="overall-attendance">
+      <div class="overall-value">{{ attendance_percentage|floatformat:1 }}%</div>
+      <div class="overall-meta">
+        Present: <strong>{{ present_count }}</strong> • Absent: <strong>{{ absent_count }}</strong>
+      </div>
+      
+      <div class="progress-bar-custom">
+        <div class="progress-fill" style="width: {{ attendance_percentage }}%"></div>
+      </div>
+
+      <div class="filter-buttons">
+        <a href="{% url 'attendance:student_report' %}?filter=last30" class="filter-btn{% if filter_type == 'last30' %} active{% endif %}">
+          <i class="bi bi-calendar"></i> Last 30 days
+        </a>
+        <a href="{% url 'attendance:student_report' %}?filter=term" class="filter-btn{% if filter_type == 'term' %} active{% endif %}">
+          <i class="bi bi-calendar2-range"></i> This term
+        </a>
+        <a href="{% url 'attendance:student_report' %}" class="filter-btn{% if filter_type == 'all' %} active{% endif %}">
+          <i class="bi bi-calendar3"></i> All
+        </a>
+        <a href="{% url 'attendance:student_report_export' %}?filter={{ filter_type }}" class="export-btn">
+          <i class="bi bi-download"></i> Export CSV
+        </a>
+      </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="table-container">
+      <table class="attendance-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Subject</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in attendance_rows %}
+            <tr>
+              <td>{{ row.date|date:"M d, Y" }}</td>
+              <td>{{ row.subject }}</td>
+              <td>{{ row.time_range }}</td>
+              <td>
+                {% if row.attended %}
+                  <span class="status-badge status-present">
+                    <i class="bi bi-check-circle-fill"></i> Present
+                  </span>
+                {% else %}
+                  <span class="status-badge status-absent">
+                    <i class="bi bi-x-circle-fill"></i> Absent
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <div class="empty-state-icon">📋</div>
+                  <p class="empty-state-text">No attendance records available</p>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

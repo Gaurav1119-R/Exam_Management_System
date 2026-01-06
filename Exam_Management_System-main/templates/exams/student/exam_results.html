@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Results - ExamHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 py-5">
+    <!-- Results Header -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-3d mb-3">
+                    📊 Exam Results
+                </h1>
+                <p class="lead text-muted">Review your performance</p>
+            </div>
+
+            <!-- 3D Paper Stack Model -->
+            <div id="papers-3d" style="width: 100%; height: 350px; border-radius: 1rem; overflow: hidden; box-shadow: 0 20px 60px rgba(15, 118, 110, 0.3); margin-bottom: 4rem;"></div>
+
+            <!-- Results Summary Cards -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-3">
+                    <div class="card float-3d text-center">
+                        <div class="card-body p-4">
+                            <div class="display-6 fw-bold text-primary mb-2">
+                                {{ score }}
+                            </div>
+                            <p class="text-muted mb-0 small">Your Score</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card float-3d text-center" style="animation-delay: 0.1s;">
+                        <div class="card-body p-4">
+                            <div class="display-6 fw-bold text-info mb-2">
+                                {{ percentage }}%
+                            </div>
+                            <p class="text-muted mb-0 small">Success Rate</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card float-3d text-center" style="animation-delay: 0.2s;">
+                        <div class="card-body p-4">
+                            <div class="display-6 fw-bold text-success mb-2">
+                                {{ correct_answers }}
+                            </div>
+                            <p class="text-muted mb-0 small">Correct</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card float-3d text-center" style="animation-delay: 0.3s;">
+                        <div class="card-body p-4">
+                            <div class="display-6 fw-bold text-danger mb-2">
+                                {{ incorrect_answers }}
+                            </div>
+                            <p class="text-muted mb-0 small">Incorrect</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto">
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h5 class="mb-0">Keep Practicing!</h5>
+                                <p class="mb-0 small">Review the incorrect answers and try again. You'll do better next time!</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exam Details -->
+            <div class="row mb-5">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header bg-light py-3">
+                            <h5 class="mb-0">Exam Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <strong>Exam Name:</strong><br>
+                                        {{ exam_name|default:"Mathematics" }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <strong>Date:</strong><br>
+                                        {{ exam_date|date:"M d, Y" }}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <strong>Time Duration:</strong><br>
+                                        {{ duration|default:"1 hour" }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Total Questions:</strong><br>
+                                        {{ total_questions|default:"50" }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Tips -->
+            <div class="row mb-5">
+                <div class="col-lg-12">
+                    <div class="card rotate-border-3d">
+                        <div class="card-header bg-light py-3">
+                            <h5 class="mb-0"><i class="bi bi-lightbulb-fill"></i> Improvement Tips</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex align-items-start">
+                                    <span class="badge badge-3d me-3">1</span>
+                                    <div>
+                                        <strong>Review Weak Areas</strong>
+                                        <p class="text-muted small mb-0">Focus on the topics where you made mistakes</p>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex align-items-start">
+                                    <span class="badge badge-3d me-3">2</span>
+                                    <div>
+                                        <strong>Practice More</strong>
+                                        <p class="text-muted small mb-0">Solve similar problems and practice questions</p>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex align-items-start">
+                                    <span class="badge badge-3d me-3">3</span>
+                                    <div>
+                                        <strong>Time Management</strong>
+                                        <p class="text-muted small mb-0">Practice answering questions faster</p>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex align-items-start">
+                                    <span class="badge badge-3d me-3">4</span>
+                                    <div>
+                                        <strong>Retake the Exam</strong>
+                                        <p class="text-muted small mb-0">Once you're ready, retake the exam for a better score</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="d-grid gap-3 gap-sm-2">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-3d btn-lg">
+                            <i class="bi bi-house-fill"></i> Return to Dashboard
+                        </a>
+                        <a href="{% url 'exams:student:exam_history' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-clock-history"></i> View Exam History
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-repeat"></i> Retake Exam
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

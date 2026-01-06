@@ -1,0 +1,356 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ExamHub</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom Theme -->
+    <link href="{% static 'css/theme.css' %}" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 450px;
+            padding: var(--spacing-lg);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .login-logo {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-floating > label {
+            color: var(--text-muted);
+            padding: 1.65rem 0.75rem 0.65rem;
+        }
+
+        .form-floating > .form-control:focus ~ label {
+            color: var(--primary);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            font-size: 0.9rem;
+        }
+
+        .remember-forgot a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .remember-forgot a:hover {
+            text-decoration: underline;
+        }
+
+        .form-check-input {
+            width: 1.1em;
+            height: 1.1em;
+            border-radius: 0.25rem;
+            border: 1.5px solid var(--border-color);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .form-check-input:checked {
+            background: var(--gradient-primary);
+            border-color: var(--primary);
+        }
+
+        .form-check-label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: var(--spacing-lg) 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .divider span {
+            margin: 0 var(--spacing-md);
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .signup-link a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #dc2626;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 0.9rem;
+        }
+
+        .error-message i {
+            font-size: 1.1rem;
+        }
+
+        /* Role Toggle Styles */
+        .role-toggle-container {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            background: var(--bg-secondary);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-lg);
+        }
+
+        .role-toggle-btn {
+            flex: 1;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.95rem;
+        }
+
+        .role-toggle-btn:hover {
+            background: rgba(99, 102, 241, 0.05);
+            color: var(--text-secondary);
+        }
+
+        .role-toggle-btn.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .role-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: var(--spacing-lg);
+            min-height: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <!-- Header -->
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h1 class="login-title">Welcome Back</h1>
+            <p class="login-subtitle">Sign in to access your exam dashboard</p>
+        </div>
+
+        <!-- Role Toggle -->
+        <div class="role-toggle-container">
+            <a href="?role=student" class="role-toggle-btn {% if login_role == 'student' %}active{% endif %}">
+                <i class="bi bi-person me-2"></i>Student
+            </a>
+            <a href="?role=admin" class="role-toggle-btn {% if login_role == 'admin' %}active{% endif %}">
+                <i class="bi bi-shield-lock me-2"></i>Admin
+            </a>
+        </div>
+
+        <!-- Role Subtitle -->
+        <div class="role-subtitle">
+            {% if login_role == 'student' %}
+                <i class="bi bi-info-circle me-1"></i>Enter your student credentials
+            {% else %}
+                <i class="bi bi-info-circle me-1"></i>Enter your admin credentials
+            {% endif %}
+        </div>
+
+        <!-- Login Card -->
+        <div class="auth-card">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="error-message">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Username Field -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+                    <label for="username">
+                        <i class="bi bi-person me-2"></i>Username
+                    </label>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-floating mb-2">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                    <label for="password">
+                        <i class="bi bi-lock me-2"></i>Password
+                    </label>
+                </div>
+
+                <!-- Remember & Forgot -->
+                <div class="remember-forgot mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">
+                            Remember me
+                        </label>
+                    </div>
+                    <a href="{% url 'password_reset' %}">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" class="btn btn-primary w-100 py-3 fw-600">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>OR</span>
+            </div>
+
+            <!-- Sign Up Link -->
+            <div class="signup-link">
+                Don't have an account?
+                <a href="{% url 'register' %}">Create one now</a>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="text-center mt-4">
+            <small class="text-muted">
+                Protected by industry-standard security • <a href="#" class="text-muted">Privacy Policy</a>
+            </small>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate form on load
+            const authCard = document.querySelector('.auth-card');
+            if (authCard) {
+                authCard.style.opacity = '0';
+                authCard.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    authCard.style.transition = 'all 600ms cubic-bezier(0.4, 0, 0.2, 1)';
+                    authCard.style.opacity = '1';
+                    authCard.style.transform = 'translateY(0)';
+                }, 50);
+            }
+
+            // Focus animation
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.closest('.form-floating').classList.add('focused');
+                });
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.closest('.form-floating').classList.remove('focused');
+                    }
+                });
+            });
+
+            // Role toggle button animation
+            const roleToggleBtns = document.querySelectorAll('.role-toggle-btn');
+            roleToggleBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    // Remove active class from all buttons
+                    roleToggleBtns.forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                });
+
+                btn.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.background = 'rgba(99, 102, 241, 0.08)';
+                    }
+                });
+
+                btn.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.background = 'transparent';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

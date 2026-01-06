@@ -1,0 +1,833 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.id %}Edit{% else %}Create{% endif %} Question Paper{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .paper-form-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-header {
+        background: white;
+        padding: 3rem 2rem;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 0;
+    }
+
+    .form-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .form-header h1 i {
+        color: #667eea;
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        font-size: 0.95rem;
+        color: #718096;
+        margin: 0;
+    }
+
+    .form-content {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-section {
+        margin-bottom: 3rem;
+        padding-bottom: 2.5rem;
+        border-bottom: 2px solid #edf2f7;
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 3px solid #667eea;
+        display: inline-block;
+    }
+
+    .section-title i {
+        font-size: 1.3rem;
+        color: #667eea;
+    }
+
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    label {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.7rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-family: inherit;
+        background: #f8fafc;
+        transition: all 0.3s ease;
+    }
+
+    input[type="text"]:hover,
+    input[type="number"]:hover,
+    select:hover,
+    textarea:hover {
+        border-color: #cbd5e0;
+        background: white;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 130px;
+    }
+
+    .helper-text {
+        font-size: 0.85rem;
+        color: #718096;
+        margin-top: 0.5rem;
+    }
+
+    .error-message {
+        color: #e53e3e;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .error-message:before {
+        content: "⚠";
+    }
+
+    .questions-container {
+        background: #f7fafc;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        max-height: 350px;
+        overflow-y: auto;
+    }
+
+    .questions-container label {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.9rem;
+        margin-bottom: 1.2rem;
+        font-weight: 400;
+        cursor: pointer;
+        padding: 0.8rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .questions-container label:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .questions-container label:last-child {
+        margin-bottom: 0;
+    }
+
+    .questions-container input[type="checkbox"] {
+        width: auto;
+        margin-top: 0.3rem;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+
+    .fields-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+        .fields-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .fields-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-header {
+            padding: 2rem 1.5rem;
+        }
+
+        .form-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .form-content {
+            padding: 1.5rem;
+        }
+
+        .paper-form-wrapper {
+            max-width: 100%;
+        }
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1.2rem;
+        margin-top: 2.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.9rem 2.2rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    .btn-cancel {
+        background: #edf2f7;
+        color: #4a5568;
+        padding: 0.9rem 2.2rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: 2px solid #cbd5e0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .btn-cancel:hover {
+        background: #e2e8f0;
+        border-color: #a0aec0;
+    }
+
+    .info-box {
+        background: #edf2f7;
+        border-left: 4px solid #667eea;
+        padding: 1rem 1.2rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #4a5568;
+        font-size: 0.9rem;
+    }
+
+    .fields-row-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .fields-row-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="paper-form-wrapper">
+    <div class="form-header">
+        <h1>
+            <i class="fas fa-file-alt"></i>
+            {% if form.instance.id %}Edit Question Paper{% else %}Create Question Paper{% endif %}
+        </h1>
+        <p>Design and configure an exam paper for your students</p>
+    </div>
+
+    <div class="form-content">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Paper Title Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-heading"></i>Paper Details
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.title.id_for_label }}">Paper Title</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="error-message">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                    <div class="helper-text">Create a descriptive title (e.g., "Mathematics Mid-term", "English Final Exam")</div>
+                </div>
+            </div>
+
+            <!-- Subject Selection Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-book"></i>Subject Selection
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Select a subject to filter and choose relevant questions</p>
+                </div>
+                <div class="form-group">
+                    <label for="id_department">Choose Department</label>
+                    <select id="id_department" class="form-select">
+                        <option value="">-- Select Department --</option>
+                        {% for d in departments %}
+                            <option value="{{ d.code }}">{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.subject.id_for_label }}">Choose Subject</label>
+                    <div id="subject-select-container">
+                        {{ form.subject }}
+                    </div>
+                    {% if form.subject.errors %}
+                        <div class="error-message">{{ form.subject.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Questions Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-list-check"></i>Questions
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-lightbulb"></i>
+                    <p id="questionsFilterNote">Select a subject above to filter available questions</p>
+                </div>
+                {% if form.questions.errors %}
+                    <div class="error-message" style="margin-bottom: 1rem;">{{ form.questions.errors.0 }}</div>
+                {% endif %}
+                <div style="margin-bottom: 1.5rem;">
+                    <button type="button" id="addQuestionBtn" class="btn-add" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 0.9rem 2rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);">
+                        <i class="fas fa-plus-circle"></i>Add New Question
+                    </button>
+                </div>
+                <div class="questions-container">
+                    {{ form.questions }}
+                </div>
+            </div>
+
+            <!-- Exam Configuration Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-sliders-h"></i>Exam Configuration
+                </div>
+                <div class="fields-row">
+                    <div class="form-group">
+                        <label for="{{ form.total_marks.id_for_label }}">Total Marks</label>
+                        {{ form.total_marks }}
+                        {% if form.total_marks.errors %}
+                            <div class="error-message">{{ form.total_marks.errors.0 }}</div>
+                        {% endif %}
+                        <div class="helper-text">Maximum marks for this exam</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.duration_minutes.id_for_label }}">Duration (minutes)</label>
+                        {{ form.duration_minutes }}
+                        {% if form.duration_minutes.errors %}
+                            <div class="error-message">{{ form.duration_minutes.errors.0 }}</div>
+                        {% endif %}
+                        <div class="helper-text">Total exam time allowed</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.passing_marks.id_for_label }}">Passing Marks</label>
+                        {{ form.passing_marks }}
+                        {% if form.passing_marks.errors %}
+                            <div class="error-message">{{ form.passing_marks.errors.0 }}</div>
+                        {% endif %}
+                        <div class="helper-text">Minimum marks to pass</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-clipboard"></i>Instructions
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.instructions.id_for_label }}">Exam Instructions</label>
+                    {{ form.instructions }}
+                    {% if form.instructions.errors %}
+                        <div class="error-message">{{ form.instructions.errors.0 }}</div>
+                    {% endif %}
+                    <div class="helper-text">Add guidelines, rules, or important notes for students</div>
+                </div>
+            </div>
+
+            <!-- Student Selection Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-users"></i>Publish to Students
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-share"></i>
+                    <p>Select students who will have access to this exam on their dashboard</p>
+                </div>
+                {% if form.selected_students.errors %}
+                    <div class="error-message" style="margin-bottom: 1rem;">{{ form.selected_students.errors.0 }}</div>
+                {% endif %}
+                <div style="margin-bottom: 1rem;">
+                    <button type="button" id="selectAllBtn" class="btn" style="background: #667eea; color: white; padding: 0.7rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fas fa-check-double me-2"></i>Select All
+                    </button>
+                    <button type="button" id="deselectAllBtn" class="btn" style="background: #cbd5e0; color: #2d3748; padding: 0.7rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-left: 0.5rem;">
+                        <i class="fas fa-times me-2"></i>Deselect All
+                    </button>
+                </div>
+                <div class="questions-container">
+                    {{ form.selected_students }}
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-group">
+                <a href="{% url 'exams:admin:paper_list' %}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i>Cancel
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-share-alt"></i>
+                    {% if form.instance.id %}Update & Publish{% else %}Publish Exam{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Question Modal -->
+<div id="questionModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; color: #1a202c; font-size: 1.3rem;">
+                <i class="fas fa-plus-circle me-2" style="color: #667eea;"></i>Add New Question
+            </h3>
+            <button type="button" id="closeModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #a0aec0;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="quickAddQuestionForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            {% csrf_token %}
+            
+            <div id="formErrors" style="display: none; background: #fed7d7; border: 2px solid #fc8181; color: #c53030; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                <i class="fas fa-exclamation-circle me-2"></i><span id="errorText"></span>
+            </div>
+            
+            <!-- Question Type -->
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #2d3748;">Question Type</label>
+                <select id="questionType" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.95rem;">
+                    <option value="mcq">Multiple Choice (MCQ)</option>
+                    <option value="descriptive">Descriptive</option>
+                </select>
+            </div>
+
+            <!-- Question Text -->
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #2d3748;">Question Text <span style="color: #e53e3e;">*</span></label>
+                <textarea id="questionText" placeholder="Enter the question here..." style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px; min-height: 80px; font-size: 0.95rem; resize: vertical;"></textarea>
+            </div>
+
+            <!-- Marks -->
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #2d3748;">Marks <span style="color: #e53e3e;">*</span></label>
+                <input type="number" id="questionMarks" placeholder="5" min="1" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.95rem;">
+            </div>
+
+            <!-- MCQ Options (only visible for MCQ) -->
+            <div id="mcqOptions" style="display: none;">
+                <div style="background: #f7fafc; padding: 1rem; border-radius: 8px;">
+                    <p style="margin: 0 0 1rem 0; font-weight: 600; color: #2d3748;">MCQ Options</p>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 500; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.9rem;">Option A <span style="color: #e53e3e;">*</span></label>
+                        <input type="text" id="optionA" placeholder="Enter option A..." style="width: 100%; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 500; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.9rem;">Option B <span style="color: #e53e3e;">*</span></label>
+                        <input type="text" id="optionB" placeholder="Enter option B..." style="width: 100%; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 500; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.9rem;">Option C <span style="color: #e53e3e;">*</span></label>
+                        <input type="text" id="optionC" placeholder="Enter option C..." style="width: 100%; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 500; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.9rem;">Option D <span style="color: #e53e3e;">*</span></label>
+                        <input type="text" id="optionD" placeholder="Enter option D..." style="width: 100%; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.9rem;">Correct Answer <span style="color: #e53e3e;">*</span></label>
+                        <select id="correctAnswer" style="width: 100%; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                            <option value="">-- Select correct answer --</option>
+                            <option value="a">Option A</option>
+                            <option value="b">Option B</option>
+                            <option value="c">Option C</option>
+                            <option value="d">Option D</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" id="cancelAddQuestion" style="flex: 1; padding: 0.75rem; background: #edf2f7; color: #4a5568; border: 2px solid #cbd5e0; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
+                    Cancel
+                </button>
+                <button type="button" id="submitAddQuestion" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);">
+                    <i class="fas fa-plus me-2"></i>Add Question
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Map question id to subject id for client-side filtering
+const questionSubjects = {
+    {% for q in all_questions %}
+    "{{ q.id }}": "{{ q.subject_id }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+function filterQuestionsBySubject() {
+    const subjectSelect = document.getElementById('id_subject');
+    const selected = subjectSelect ? subjectSelect.value : '';
+    const container = document.querySelector('#id_questions');
+    const inputs = container ? container.querySelectorAll('input[type="checkbox"]') : [];
+
+    inputs.forEach(function(inp) {
+        const qid = inp.value;
+        const subjectId = questionSubjects[qid];
+        const li = inp.closest('li') || inp.parentElement;
+        if (!selected || subjectId === selected) {
+            if (li) li.style.display = '';
+            inp.disabled = false;
+        } else {
+            if (li) li.style.display = 'none';
+            inp.checked = false;
+            inp.disabled = true;
+        }
+    });
+
+    const note = document.getElementById('questionsFilterNote');
+    if (note) {
+        if (selected) {
+            note.innerHTML = '<i class="fas fa-check-circle" style="color: #48bb78;"></i> Showing questions for selected subject.';
+        } else {
+            note.innerHTML = '<i class="fas fa-lightbulb"></i> Select a subject above to filter available questions';
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const subjectSelect = document.getElementById('id_subject');
+    if (subjectSelect) {
+        subjectSelect.addEventListener('change', filterQuestionsBySubject);
+    }
+    filterQuestionsBySubject();
+
+    // Select All / Deselect All functionality
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const studentsContainer = document.querySelector('#id_selected_students');
+
+    if (selectAllBtn && studentsContainer) {
+        selectAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const checkboxes = studentsContainer.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+    }
+
+    if (deselectAllBtn && studentsContainer) {
+        deselectAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const checkboxes = studentsContainer.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+    }
+
+    // Modal functionality
+    const modal = document.getElementById('questionModal');
+    const addQuestionBtn = document.getElementById('addQuestionBtn');
+    const closeModal = document.getElementById('closeModal');
+    const cancelAddQuestion = document.getElementById('cancelAddQuestion');
+    const submitAddQuestion = document.getElementById('submitAddQuestion');
+    const questionType = document.getElementById('questionType');
+    const mcqOptions = document.getElementById('mcqOptions');
+
+    // Show modal
+    addQuestionBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        modal.style.display = 'flex';
+    });
+
+    // Close modal
+    function closeQuestionModal() {
+        modal.style.display = 'none';
+        document.getElementById('quickAddQuestionForm').reset();
+        mcqOptions.style.display = 'none';
+    }
+
+    closeModal.addEventListener('click', closeQuestionModal);
+    cancelAddQuestion.addEventListener('click', closeQuestionModal);
+
+    // Toggle MCQ options visibility
+    questionType.addEventListener('change', function() {
+        if (this.value === 'mcq') {
+            mcqOptions.style.display = 'block';
+        } else {
+            mcqOptions.style.display = 'none';
+        }
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeQuestionModal();
+        }
+    });
+
+    // Submit question
+    submitAddQuestion.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const subjectSelect = document.getElementById('id_subject');
+        const selectedSubject = subjectSelect.value;
+        const questionText = document.getElementById('questionText').value.trim();
+        const marks = document.getElementById('questionMarks').value.trim();
+        const qType = questionType.value;
+        const formErrors = document.getElementById('formErrors');
+        const errorText = document.getElementById('errorText');
+
+        // Clear previous errors
+        formErrors.style.display = 'none';
+
+        // Validation
+        if (!selectedSubject) {
+            errorText.textContent = 'Please select a subject first';
+            formErrors.style.display = 'block';
+            return;
+        }
+
+        if (!questionText) {
+            errorText.textContent = 'Please enter the question text';
+            formErrors.style.display = 'block';
+            return;
+        }
+
+        if (!marks || marks <= 0) {
+            errorText.textContent = 'Please enter a valid mark value';
+            formErrors.style.display = 'block';
+            return;
+        }
+
+        if (qType === 'mcq') {
+            const optionA = document.getElementById('optionA').value.trim();
+            const optionB = document.getElementById('optionB').value.trim();
+            const optionC = document.getElementById('optionC').value.trim();
+            const optionD = document.getElementById('optionD').value.trim();
+            const correctAnswer = document.getElementById('correctAnswer').value;
+
+            if (!optionA) {
+                errorText.textContent = 'Please enter Option A';
+                formErrors.style.display = 'block';
+                return;
+            }
+            if (!optionB) {
+                errorText.textContent = 'Please enter Option B';
+                formErrors.style.display = 'block';
+                return;
+            }
+            if (!optionC) {
+                errorText.textContent = 'Please enter Option C';
+                formErrors.style.display = 'block';
+                return;
+            }
+            if (!optionD) {
+                errorText.textContent = 'Please enter Option D';
+                formErrors.style.display = 'block';
+                return;
+            }
+            if (!correctAnswer) {
+                errorText.textContent = 'Please select the correct answer';
+                formErrors.style.display = 'block';
+                return;
+            }
+        }
+
+        // Prepare data
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        formData.append('subject', selectedSubject);
+        formData.append('question_text', questionText);
+        formData.append('marks', marks);
+        formData.append('question_type', qType);
+
+        if (qType === 'mcq') {
+            formData.append('option_a', document.getElementById('optionA').value.trim());
+            formData.append('option_b', document.getElementById('optionB').value.trim());
+            formData.append('option_c', document.getElementById('optionC').value.trim());
+            formData.append('option_d', document.getElementById('optionD').value.trim());
+            formData.append('correct_answer', document.getElementById('correctAnswer').value);
+        }
+
+        // Submit via AJAX
+        submitAddQuestion.disabled = true;
+        submitAddQuestion.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+
+        fetch('{% url "exams:admin:question_create" %}', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => {
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Add the new question to the questions list
+                const questionsContainer = document.querySelector('#id_questions');
+                const newLi = document.createElement('li');
+                newLi.innerHTML = `
+                    <label>
+                        <input type="checkbox" name="questions" value="${data.question_id}" checked>
+                        ${data.question_text} (${data.marks} marks)
+                    </label>
+                `;
+                questionsContainer.appendChild(newLi);
+
+                // Update question subjects map
+                questionSubjects[data.question_id] = selectedSubject;
+
+                // Show success
+                errorText.textContent = '✓ Question added successfully!';
+                formErrors.style.background = '#c6f6d5';
+                formErrors.style.borderColor = '#9ae6b4';
+                formErrors.style.color = '#22543d';
+                formErrors.style.display = 'block';
+
+                setTimeout(() => {
+                    closeQuestionModal();
+                    filterQuestionsBySubject();
+                }, 1500);
+            } else {
+                errorText.textContent = 'Error: ' + (data.error || 'Could not create question');
+                formErrors.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            errorText.textContent = 'Network error: ' + error.message;
+            formErrors.style.display = 'block';
+        })
+        .finally(() => {
+            submitAddQuestion.disabled = false;
+            submitAddQuestion.innerHTML = '<i class="fas fa-plus me-2"></i>Add Question';
+        });
+    });
+});
+</script>
+
+<script src="{% static 'js/department-subject-filter.js' %}"></script>
+
+{% endblock %}

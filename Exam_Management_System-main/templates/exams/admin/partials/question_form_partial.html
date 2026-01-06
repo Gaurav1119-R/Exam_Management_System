@@ -1,0 +1,118 @@
+<form method="post" id="quick-action-form" novalidate>
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.subject.id_for_label }}" class="form-label">
+                <i class="fas fa-book"></i> Subject
+            </label>
+            {{ form.subject }}
+            {% if form.subject.errors %}
+                <div class="invalid-feedback d-block">{{ form.subject.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.question_type.id_for_label }}" class="form-label">
+                <i class="fas fa-tag"></i> Question Type
+            </label>
+            {{ form.question_type }}
+            {% if form.question_type.errors %}
+                <div class="invalid-feedback d-block">{{ form.question_type.errors }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="{{ form.question_text.id_for_label }}" class="form-label">
+            <i class="fas fa-align-left"></i> Question Text
+        </label>
+        {{ form.question_text }}
+        {% if form.question_text.errors %}
+            <div class="invalid-feedback d-block">{{ form.question_text.errors }}</div>
+        {% endif %}
+    </div>
+
+    <!-- MCQ Options -->
+    <div id="mcqOptions">
+        <h5 class="mb-3">Multiple Choice Options</h5>
+        
+        <div class="mb-3">
+            <label for="{{ form.option_a.id_for_label }}" class="form-label">Option A</label>
+            {{ form.option_a }}
+            {% if form.option_a.errors %}
+                <div class="invalid-feedback d-block">{{ form.option_a.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.option_b.id_for_label }}" class="form-label">Option B</label>
+            {{ form.option_b }}
+            {% if form.option_b.errors %}
+                <div class="invalid-feedback d-block">{{ form.option_b.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.option_c.id_for_label }}" class="form-label">Option C</label>
+            {{ form.option_c }}
+            {% if form.option_c.errors %}
+                <div class="invalid-feedback d-block">{{ form.option_c.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.option_d.id_for_label }}" class="form-label">Option D</label>
+            {{ form.option_d }}
+            {% if form.option_d.errors %}
+                <div class="invalid-feedback d-block">{{ form.option_d.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.correct_answer.id_for_label }}" class="form-label">
+                <i class="fas fa-check"></i> Correct Answer
+            </label>
+            {{ form.correct_answer }}
+            {% if form.correct_answer.errors %}
+                <div class="invalid-feedback d-block">{{ form.correct_answer.errors }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="{{ form.marks.id_for_label }}" class="form-label">
+            <i class="fas fa-star"></i> Marks
+        </label>
+        {{ form.marks }}
+        {% if form.marks.errors %}
+            <div class="invalid-feedback d-block">{{ form.marks.errors }}</div>
+        {% endif %}
+    </div>
+
+    <hr>
+
+    <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-success me-2"><i class="fas fa-save"></i> Create Question</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    </div>
+</form>
+
+<script>
+    // Toggle MCQ options based on question type
+    function setupMcqToggle() {
+        const select = document.querySelector('#id_question_type');
+        const mcqOptions = document.getElementById('mcqOptions');
+        if (!select) return;
+        function toggle() {
+            mcqOptions.style.display = select.value === 'mcq' ? 'block' : 'none';
+        }
+        select.addEventListener('change', toggle);
+        toggle();
+    }
+
+    // Call on load if loaded via AJAX into modal
+    document.addEventListener('DOMContentLoaded', function() {
+        setupMcqToggle();
+    });
+</script>

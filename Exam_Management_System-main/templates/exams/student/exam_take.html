@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ exam_schedule.question_paper.subject.name }} - Take Exam{% endblock %}
+
+{% block content %}
+<div class="exam-take-container">
+    <!-- Exam Header with Timer -->
+    <div class="exam-header fade-in-up">
+        <div class="exam-header-left">
+            <div class="exam-subject">
+                <i class="bi bi-file-text"></i>
+                <div>
+                    <h1>{{ exam_schedule.question_paper.subject.name }}</h1>
+                    <p>{{ exam_schedule.question_paper.title|default:"Exam" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="exam-header-right">
+            <div class="timer-card">
+                <div class="timer-label">Time Remaining</div>
+                <div class="timer-display" id="timer">
+                    <span id="timer-minutes">90</span>:<span id="timer-seconds">00</span>
+                </div>
+                <div class="timer-info">Out of {{ exam_schedule.question_paper.duration_minutes }} minutes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Important Notice -->
+    <div class="alert alert-warning alert-dismissible fade show mt-4" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="bi bi-exclamation-triangle-fill me-3 mt-1"></i>
+            <div>
+                <strong>Important Instructions:</strong>
+                <p class="mb-0 mt-2">{{ exam_schedule.question_paper.instructions|linebreaks }}</p>
+                <ul class="mt-2 mb-0">
+                    <li>Read each question carefully before answering</li>
+                    <li>Select the most appropriate answer</li>
+                    <li>You can review and change your answers before submitting</li>
+                    <li>Your exam will be auto-submitted when time expires</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Form -->
+    <form method="post" id="examForm" class="exam-form">
+        {% csrf_token %}
+
+        {% for question in questions %}
+        <div class="question-card fade-in-up" style="animation-delay: {% widthratio forloop.counter0 50 1 %}ms;">
+            <!-- Question Header -->
+            <div class="question-header">
+                <div class="question-number">
+                    <span class="badge bg-primary">Q{{ forloop.counter }}</span>
+                </div>
+                <div class="question-info">
+                    <span class="question-type">
+                        {% if question.question_type == 'mcq' %}
+                        <i class="bi bi-circle-half"></i> Multiple Choice
+                        {% else %}
+                        <i class="bi bi-pencil-square"></i> Descriptive
+                        {% endif %}
+                    </span>
+                    <span class="question-marks">
+                        <i class="bi bi-star-fill"></i> {{ question.marks }} marks
+                    </span>
+                </div>
+            </div>
+
+            <!-- Question Text -->
+            <div class="question-text">
+                <p>{{ question.question_text }}</p>
+            </div>
+
+            <!-- Question Body -->
+            <div class="question-body">
+                {% if question.question_type == 'mcq' %}
+                <!-- MCQ Options -->
+                <div class="mcq-options">
+                    <div class="form-check mcq-option">
+                        <input class="form-check-input" type="radio" name="q{{ question.id }}" id="q{{ question.id }}_a" value="a">
+                        <label class="form-check-label" for="q{{ question.id }}_a">
+                            <span class="option-letter">A</span>
+                            <span class="option-text">{{ question.option_a }}</span>
+                        </label>
+                    </div>
+                    <div class="form-check mcq-option">
+                        <input class="form-check-input" type="radio" name="q{{ question.id }}" id="q{{ question.id }}_b" value="b">
+                        <label class="form-check-label" for="q{{ question.id }}_b">
+                            <span class="option-letter">B</span>
+                            <span class="option-text">{{ question.option_b }}</span>
+                        </label>
+                    </div>
+                    <div class="form-check mcq-option">
+                        <input class="form-check-input" type="radio" name="q{{ question.id }}" id="q{{ question.id }}_c" value="c">
+                        <label class="form-check-label" for="q{{ question.id }}_c">
+                            <span class="option-letter">C</span>
+                            <span class="option-text">{{ question.option_c }}</span>
+                        </label>
+                    </div>
+                    <div class="form-check mcq-option">
+                        <input class="form-check-input" type="radio" name="q{{ question.id }}" id="q{{ question.id }}_d" value="d">
+                        <label class="form-check-label" for="q{{ question.id }}_d">
+                            <span class="option-letter">D</span>
+                            <span class="option-text">{{ question.option_d }}</span>
+                        </label>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Descriptive Answer -->
+                <textarea class="form-control form-control-lg" name="q{{ question.id }}" rows="8" placeholder="Enter your detailed answer here..." style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--spacing-md); font-family: 'Inter', sans-serif; min-height: 200px;"></textarea>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Submit Section -->
+        <div class="submit-section fade-in-up" style="animation-delay: {% widthratio questions|length 50 1 %}ms;">
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Ready to submit?</strong> Once you submit, you cannot make any changes to your answers.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="submit-buttons">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-x-circle"></i> Cancel Exam
+                </a>
+                <button type="button" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#submitModal">
+                    <i class="bi bi-send-fill"></i> Review & Submit
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Submit Confirmation Modal -->
+    <div class="modal fade" id="submitModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Submission</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="submission-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <h4>Are you sure you want to submit?</h4>
+                        <p>Once submitted, you won't be able to make any changes to your answers. Please review your answers before submitting.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-arrow-left"></i> Go Back
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="document.getElementById('examForm').submit();">
+                        <i class="bi bi-check-circle"></i> Yes, Submit Exam
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .exam-take-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: var(--spacing-lg);
+    }
+
+    .exam-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        gap: var(--spacing-lg);
+    }
+
+    .exam-header-left {
+        flex: 1;
+    }
+
+    .exam-subject {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .exam-subject i {
+        font-size: 2rem;
+        color: var(--primary);
+    }
+
+    .exam-subject h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .exam-subject p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+    }
+
+    .timer-card {
+        background: linear-gradient(135deg, var(--primary), #8b5cf6);
+        color: white;
+        padding: var(--spacing-md) var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        text-align: center;
+        box-shadow: var(--shadow-md);
+    }
+
+    .timer-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .timer-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        margin: var(--spacing-sm) 0;
+    }
+
+    .timer-info {
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
+
+    .exam-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    .question-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        transition: all var(--transition-normal);
+    }
+
+    .question-card:hover {
+        border-color: var(--primary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .question-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .question-info {
+        display: flex;
+        gap: var(--spacing-md);
+        flex: 1;
+    }
+
+    .question-type,
+    .question-marks {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        background: var(--bg-secondary);
+        padding: 0.375rem var(--spacing-sm);
+        border-radius: var(--radius-sm);
+    }
+
+    .question-text {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .question-text p {
+        font-size: 1.0625rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .question-body {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .mcq-options {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .mcq-option {
+        display: flex;
+        align-items: center;
+        padding: var(--spacing-md);
+        background: var(--bg-secondary);
+        border: 2px solid transparent;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-normal);
+    }
+
+    .mcq-option:hover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .mcq-option input[type="radio"]:checked + label {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .mcq-option input[type="radio"] {
+        margin-right: var(--spacing-md);
+        cursor: pointer;
+    }
+
+    .mcq-option label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        cursor: pointer;
+        margin: 0;
+        flex: 1;
+    }
+
+    .option-letter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--primary), #8b5cf6);
+        color: white;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .option-text {
+        color: var(--text-primary);
+        line-height: 1.5;
+    }
+
+    .submit-section {
+        margin-top: var(--spacing-xl);
+    }
+
+    .submit-buttons {
+        display: flex;
+        gap: var(--spacing-md);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .submit-buttons .btn {
+        min-width: 200px;
+    }
+
+    .submission-warning {
+        text-align: center;
+        padding: var(--spacing-lg);
+    }
+
+    .submission-warning i {
+        font-size: 3rem;
+        color: #f59e0b;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .submission-warning h4 {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .submission-warning p {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .exam-header {
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .question-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .timer-display {
+            font-size: 1.75rem;
+        }
+
+        .submit-buttons {
+            flex-direction: column;
+        }
+
+        .submit-buttons .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    // Timer functionality
+    let remainingTime = {{ exam_schedule.question_paper.duration_minutes|default:90 }} * 60;
+    
+    function updateTimer() {
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+        document.getElementById('timer-minutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('timer-seconds').textContent = String(seconds).padStart(2, '0');
+        
+        if (remainingTime <= 300 && remainingTime > 0) {
+            document.querySelector('.timer-card').style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        }
+        
+        if (remainingTime <= 0) {
+            document.getElementById('examForm').submit();
+        }
+        remainingTime--;
+    }
+    
+    setInterval(updateTimer, 1000);
+</script>
+{% endblock %}

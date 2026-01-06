@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - ExamHub{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-7">
+            <!-- Registration Header -->
+            <div class="text-center mb-4 fade-in-up">
+                <h1 class="h2 fw-800 mb-2">Create Your Account</h1>
+                <p class="text-muted">Join ExamHub to start your exam journey</p>
+            </div>
+
+            <!-- Registration Card -->
+            <div class="auth-card fade-in-up" style="animation-delay: 100ms;">
+                <!-- Role Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-600 mb-3">I am a:</label>
+                    <div class="btn-group w-100" role="group" aria-label="Role selection">
+                        <input type="radio" class="btn-check" name="role" id="role_student" value="student" checked>
+                        <label class="btn btn-outline-primary flex-grow-1" for="role_student">
+                            <i class="bi bi-person-fill me-2"></i>Student
+                        </label>
+
+                        <input type="radio" class="btn-check" name="role" id="role_admin" value="admin">
+                        <label class="btn btn-outline-primary flex-grow-1" for="role_admin">
+                            <i class="bi bi-shield-check me-2"></i>Administrator
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div id="studentFields" class="alert alert-info d-flex align-items-start mb-4">
+                    <i class="bi bi-info-circle-fill me-2 flex-shrink-0 mt-1"></i>
+                    <div class="small">
+                        <strong>Note:</strong> Your enrollment number will be auto-generated. Department defaults to "Undeclared" and can be updated in your profile.
+                    </div>
+                </div>
+
+                <form method="post" id="registrationForm" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Name Fields -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.first_name }}
+                                <label for="{{ form.first_name.id_for_label }}">
+                                    <i class="bi bi-person me-2"></i>First Name
+                                </label>
+                                {% if form.first_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.last_name }}
+                                <label for="{{ form.last_name.id_for_label }}">
+                                    <i class="bi bi-person me-2"></i>Last Name
+                                </label>
+                                {% if form.last_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="form-floating mb-3">
+                        {{ form.email }}
+                        <label for="{{ form.email.id_for_label }}">
+                            <i class="bi bi-envelope me-2"></i>Email Address
+                        </label>
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password Fields -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.password1 }}
+                                <label for="{{ form.password1.id_for_label }}">
+                                    <i class="bi bi-lock me-2"></i>Password
+                                </label>
+                                {% if form.password1.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.password1.errors }}</div>
+                                {% endif %}
+                            </div>
+                            {% if form.password1.help_text %}
+                                <div class="form-text text-muted small mt-2">
+                                    {{ form.password1.help_text|safe }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.password2 }}
+                                <label for="{{ form.password2.id_for_label }}">
+                                    <i class="bi bi-lock-fill me-2"></i>Confirm Password
+                                </label>
+                                {% if form.password2.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.password2.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms Checkbox -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="terms" required>
+                        <label class="form-check-label small" for="terms">
+                            I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-600 mb-3" aria-label="Create Account">
+                        <i class="bi bi-check-circle me-2"></i>Create Account
+                    </button>
+                </form>
+
+                <!-- Login Link -->
+                <p class="text-center small text-muted mb-0">
+                    Already have an account? 
+                    <a href="{% url 'login' %}" class="text-primary fw-600">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleStudent = document.getElementById('role_student');
+        const roleAdmin = document.getElementById('role_admin');
+        const studentFields = document.getElementById('studentFields');
+
+        if (studentFields && roleStudent && roleAdmin) {
+            roleStudent.addEventListener('change', function() {
+                if (this.checked) {
+                    studentFields.style.display = 'block';
+                }
+            });
+            roleAdmin.addEventListener('change', function() {
+                if (this.checked) {
+                    studentFields.style.display = 'none';
+                }
+            });
+            
+            // Set initial state
+            if (roleAdmin.checked) {
+                studentFields.style.display = 'none';
+            }
+        }
+
+        // Form validation
+        const form = document.getElementById('registrationForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                this.classList.add('was-validated');
+            });
+        }
+    });
+</script>
+{% endblock %}

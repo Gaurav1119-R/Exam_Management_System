@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Projects - Exam Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-file-alt"></i> My Projects</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="#" class="btn btn-success">
+                <i class="fas fa-plus"></i> Submit New Project
+            </a>
+        </div>
+    </div>
+
+    <!-- Projects List -->
+    <div class="row">
+        <div class="col-md-12">
+            {% for project in projects %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-7">
+                                <h5 class="card-title">{{ project.title }}</h5>
+                                <p class="card-text text-muted">{{ project.description|truncatewords:20 }}</p>
+                                <small>
+                                    <i class="fas fa-calendar"></i> Submitted: {{ project.submission_date }}
+                                    <i class="fas fa-clock ms-2"></i> Due: {{ project.due_date }}
+                                </small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    {% if project.marks_obtained %}
+                                        <h5>{{ project.marks_obtained }}/{{ project.total_marks }}</h5>
+                                        <small class="text-muted">Marks</small>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending Grading</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                {% if project.status == 'pending' %}
+                                    <span class="badge bg-secondary mb-2">Pending</span>
+                                {% elif project.status == 'submitted' %}
+                                    <span class="badge bg-info mb-2">Submitted</span>
+                                {% elif project.status == 'graded' %}
+                                    <span class="badge bg-success mb-2">Graded</span>
+                                {% elif project.status == 'late' %}
+                                    <span class="badge bg-danger mb-2">Late</span>
+                                {% endif %}
+                                <br>
+                                <a href="#" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> You haven't submitted any projects yet.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

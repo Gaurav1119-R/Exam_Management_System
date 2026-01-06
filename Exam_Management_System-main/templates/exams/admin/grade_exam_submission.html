@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Grade Exam - {{ student_profile.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 py-4">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{% url 'exams:admin:submissions_detail' schedule.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Submissions
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="page-title text-3d">
+                <i class="bi bi-pencil-square spin-3d"></i> Grade Exam Submission
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Student Info Card -->
+            <div class="card mb-4 float-3d">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person icon-3d"></i> Student Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Name:</strong><br>
+                                {{ student_profile.user.get_full_name }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Enrollment:</strong><br>
+                                {{ student_profile.enrollment_number }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Department:</strong><br>
+                                {{ student_profile.department }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Semester:</strong><br>
+                                {{ student_profile.semester }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exam Info Card -->
+            <div class="card mb-4 float-3d" style="animation-delay: 0.2s;">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-book icon-3d"></i> Exam Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Subject:</strong><br>
+                                {{ schedule.question_paper.subject.name }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Paper:</strong><br>
+                                {{ schedule.question_paper.title }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Date:</strong><br>
+                                {{ schedule.scheduled_date|date:"M d, Y" }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Total Marks:</strong><br>
+                                <strong class="text-primary neon-3d">{{ paper.get_total_marks|default:paper.total_marks }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grading Form -->
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="card float-3d" style="animation-delay: 0.4s;">
+                    <div class="card-header bg-light py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil spin-3d"></i> Grade Answers
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if responses_data %}
+                            {% for item in responses_data %}
+                            <div class="question-grading-item mb-4 pb-4 {% if not forloop.last %}border-bottom{% endif %}">
+                                <!-- Question -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-dark">
+                                        Question {{ forloop.counter }} ({{ item.question.marks }} marks)
+                                    </h6>
+                                    <p class="mb-2 bg-light p-3 rounded">
+                                        {{ item.question.question_text }}
+                                    </p>
+                                    
+                                    {% if item.question.question_type == 'mcq' %}
+                                    <div class="mcq-options">
+                                        <p class="mb-2">
+                                            <strong>Options:</strong>
+                                        </p>
+                                        <ul class="list-unstyled">
+                                            <li><strong>A:</strong> {{ item.question.option_a }}</li>
+                                            <li><strong>B:</strong> {{ item.question.option_b }}</li>
+                                            <li><strong>C:</strong> {{ item.question.option_c }}</li>
+                                            <li><strong>D:</strong> {{ item.question.option_d }}</li>
+                                        </ul>
+                                        <p class="mb-0">
+                                            <strong>Correct Answer:</strong> 
+                                            <span class="badge bg-success">{{ item.question.correct_answer|upper }}</span>
+                                        </p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Student's Answer -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-dark">Student's Answer:</h6>
+                                    {% if item.response %}
+                                    <div class="bg-light p-3 rounded">
+                                        <p class="mb-0">{{ item.response.student_answer }}</p>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-circle"></i> No answer submitted
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Marks Input -->
+                                <div class="mb-0">
+                                    <label for="marks_{{ item.question.id }}" class="form-label fw-bold">
+                                        Assign Marks (out of {{ item.question.marks }})
+                                    </label>
+                                    <div class="input-group">
+                                        <input 
+                                            type="number" 
+                                            class="form-control" 
+                                            id="marks_{{ item.question.id }}"
+                                            name="marks_{{ item.question.id }}"
+                                            min="0"
+                                            max="{{ item.question.marks }}"
+                                            value="{% if item.response.marks_obtained %}{{ item.response.marks_obtained }}{% endif %}"
+                                            required
+                                        >
+                                        <span class="input-group-text">/ {{ item.question.marks }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Pass/Fail Selection -->
+                            <div class="card mt-4 border-2" style="border-color: #0d6efd !important; background: #f0f7ff;">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-check2-circle"></i> Final Grade Decision
+                                    </h6>
+                                    <p class="text-muted mb-3">Select the final result for this student:</p>
+                                    
+                                    <div class="d-flex gap-3">
+                                        <!-- Pass Option -->
+                                        <div class="pass-fail-choice">
+                                            <input 
+                                                type="radio" 
+                                                id="pass_choice"
+                                                name="final_status" 
+                                                value="passed"
+                                                class="form-check-input pass-fail-input"
+                                            >
+                                            <label for="pass_choice" class="form-check-label pass-fail-label ms-2">
+                                                <i class="bi bi-check-circle-fill"></i> PASS
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Fail Option -->
+                                        <div class="pass-fail-choice">
+                                            <input 
+                                                type="radio" 
+                                                id="fail_choice"
+                                                name="final_status" 
+                                                value="failed"
+                                                class="form-check-input pass-fail-input"
+                                            >
+                                            <label for="fail_choice" class="form-check-label pass-fail-label ms-2">
+                                                <i class="bi bi-x-circle-fill"></i> FAIL
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="bi bi-info-circle"></i> Admin discretion applies. Override automatic calculation if needed.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-check-circle"></i> Save Marks & Finalize
+                                </button>
+                                <a href="{% url 'exams:admin:submissions_detail' schedule.id %}" class="btn btn-outline-secondary btn-lg">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                            </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-circle"></i> No answers found for this student.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Current Result Card -->
+            <div class="card mb-4 sticky-top" style="top: 20px;">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chart-bar"></i> Current Result
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Pass/Fail Status Badge -->
+                    <div class="mb-4 p-3 rounded" id="passFail_display" style="background: #f8f9fa; text-align: center;">
+                        <p class="mb-2 text-muted small">Status</p>
+                        <p class="mb-0" id="passFail_badge">
+                            <span class="badge bg-warning text-dark" style="font-size: 1.1rem; padding: 0.6rem 1.2rem;">
+                                <i class="bi bi-question-circle"></i> Calculating...
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="mb-1 text-muted small">Current Marks</p>
+                        <p class="mb-0">
+                            <strong class="text-primary" style="font-size: 1.5rem;" id="currentMarks_display">
+                                0/{{ paper.get_total_marks|default:paper.total_marks }}
+                            </strong>
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="mb-1 text-muted small">Current Percentage</p>
+                        <p class="mb-0">
+                            <strong class="text-primary" style="font-size: 1.5rem;" id="percentage_display">
+                                0%
+                            </strong>
+                        </p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <p class="mb-2 text-muted small">Progress to Passing ({{ paper.passing_marks }} marks needed)</p>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar" id="progress_bar" role="progressbar" style="width: 0%; background: #ffc107;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                <span id="progress_text" style="color: #000; font-weight: 600; font-size: 0.9rem;">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-0 pb-3 border-bottom">
+                        <p class="mb-1 text-muted small">Passing Threshold</p>
+                        <p class="mb-0">
+                            <strong>{{ paper.passing_marks }}/{{ paper.get_total_marks|default:paper.total_marks }} marks</strong>
+                        </p>
+                    </div>
+
+                    {% if result.graded_at %}
+                    <hr>
+                    <small class="text-muted">
+                        <i class="bi bi-calendar-event"></i> Last updated: {{ result.graded_at|date:"M d, Y H:i" }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Info Card -->
+            <div class="card">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Quick Info
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>Total Questions:</strong><br>
+                            {{ responses_data|length }}
+                        </li>
+                        <li class="mb-2">
+                            <strong>Passing Marks:</strong><br>
+                            {{ paper.passing_marks }}
+                        </li>
+                        <li>
+                            <strong>Duration:</strong><br>
+                            {{ paper.duration_minutes }} minutes
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-header {
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 1.5rem;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+    
+    .question-grading-item {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+    }
+    
+    .question-grading-item h6 {
+        color: #1a1a1a;
+        margin-bottom: 1rem;
+    }
+    
+    .mcq-options {
+        background: white;
+        padding: 1rem;
+        border-left: 4px solid #0d6efd;
+        border-radius: 0.25rem;
+    }
+    
+    .input-group .form-control {
+        font-size: 1.25rem;
+        padding: 0.75rem;
+    }
+    
+    .card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    /* Pass/Fail Choice Styling */
+    .pass-fail-choice {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+    
+    .pass-fail-input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        left: 0;
+        top: 0;
+        margin: 0;
+    }
+    
+    .pass-fail-label {
+        flex: 1;
+        margin: 0;
+        padding: 1rem 1.5rem;
+        border: 2px solid #dee2e6;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        background: white;
+        color: #6c757d;
+        cursor: pointer;
+        user-select: none;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+    
+    .pass-fail-input:checked + .pass-fail-label {
+        border-color: #28a745;
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .pass-fail-choice:has(input[value="failed"]:checked) .pass-fail-label {
+        border-color: #dc3545;
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .pass-fail-label:hover {
+        border-color: #adb5bd;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const totalMarks = {{ paper.get_total_marks|default:paper.total_marks }};
+    const passingMarks = {{ paper.passing_marks }};
+    
+    function updatePassFailStatus() {
+        // Get all mark inputs
+        let totalObtained = 0;
+        const inputs = document.querySelectorAll('input[name^="marks_"]');
+        
+        inputs.forEach(input => {
+            if (input.value && !isNaN(input.value)) {
+                totalObtained += parseInt(input.value);
+            }
+        });
+        
+        // Calculate percentage
+        const percentage = totalMarks > 0 ? (totalObtained / totalMarks) * 100 : 0;
+        
+        // Check if admin selected a manual status
+        const manualStatus = document.querySelector('input[name="final_status"]:checked');
+        
+        // Determine pass/fail (prefer manual selection)
+        let isPassed;
+        if (manualStatus) {
+            isPassed = manualStatus.value === 'passed';
+        } else {
+            isPassed = totalObtained >= passingMarks;
+        }
+        
+        // Update display
+        document.getElementById('currentMarks_display').textContent = totalObtained + '/' + totalMarks;
+        document.getElementById('percentage_display').textContent = percentage.toFixed(2) + '%';
+        
+        // Update progress bar
+        const progressPercent = Math.min((totalObtained / passingMarks) * 100, 100);
+        const progressBar = document.getElementById('progress_bar');
+        progressBar.style.width = progressPercent + '%';
+        document.getElementById('progress_text').textContent = Math.round(progressPercent) + '%';
+        
+        // Change progress bar color based on status
+        if (isPassed) {
+            progressBar.style.background = '#28a745';
+        } else if (progressPercent >= 50) {
+            progressBar.style.background = '#ffc107';
+        } else {
+            progressBar.style.background = '#dc3545';
+        }
+        
+        // Update badge
+        const badgeElement = document.getElementById('passFail_badge');
+        if (isPassed) {
+            badgeElement.innerHTML = '<span class="badge bg-success" style="font-size: 1.1rem; padding: 0.6rem 1.2rem;"><i class="bi bi-check-circle-fill"></i> PASSED ✓</span>';
+        } else {
+            badgeElement.innerHTML = '<span class="badge bg-danger" style="font-size: 1.1rem; padding: 0.6rem 1.2rem;"><i class="bi bi-x-circle-fill"></i> FAILED</span>';
+        }
+    }
+    
+    // Add event listeners to all mark inputs
+    const inputs = document.querySelectorAll('input[name^="marks_"]');
+    inputs.forEach(input => {
+        input.addEventListener('input', updatePassFailStatus);
+        input.addEventListener('change', updatePassFailStatus);
+    });
+    
+    // Add event listeners to Pass/Fail radio buttons
+    const statusInputs = document.querySelectorAll('input[name="final_status"]');
+    statusInputs.forEach(input => {
+        input.addEventListener('change', updatePassFailStatus);
+    });
+    
+    // Initial calculation
+    updatePassFailStatus();
+    
+    // Add event listeners to Pass/Fail radio buttons
+    const statusInputs = document.querySelectorAll('input[name="final_status"]');
+    statusInputs.forEach(input => {
+        input.addEventListener('change', updatePassFailStatus);
+    });
+});
+</script>
+{% endblock %}
