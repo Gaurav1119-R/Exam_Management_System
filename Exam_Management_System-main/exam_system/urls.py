@@ -11,6 +11,7 @@ urlpatterns = [
     path('attendance/', include('apps.attendance.urls')),
     path('exams/', include('apps.exams.urls')),
     path('reports/', include('apps.reports.urls')),
+    path('ai_assistant/', include('apps.ai_assistant.urls')),
 ]
 
 # Serve media files during development

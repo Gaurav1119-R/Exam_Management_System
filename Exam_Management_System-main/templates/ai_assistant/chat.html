@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Assistant - Exam Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-0 p-0" style="height: calc(100vh - 60px);">
+    <div class="row h-100 m-0">
+        <!-- Sidebar with chat history -->
+        <div class="col-lg-3 col-md-4 p-0 d-flex flex-column" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; overflow-y: auto;">
+            <div class="p-4">
+                <a href="{% url 'ai_assistant:new_chat' %}" class="btn btn-light btn-block w-100 mb-3 rounded-pill" style="font-weight: 600;">
+                    <i class="fas fa-plus"></i> New Chat
+                </a>
+                
+                <h5 class="mt-4 mb-3 text-white" style="font-weight: 700;">Chat History</h5>
+                
+                {% if user_sessions %}
+                    <div class="list-group">
+                        {% for session in user_sessions %}
+                            <a href="{% url 'ai_assistant:chat' session.id %}"
+                               class="list-group-item list-group-item-action rounded mb-2"
+                               style="white-space: normal; background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">
+                                <small style="font-weight: 600;">{{ session.title }}</small>
+                                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">
+                                    {{ session.updated_at|date:"M d, H:i" }}
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-white small" style="opacity: 0.8;">No chat history yet. Start a new chat!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Main chat area -->
+        <div class="col-lg-9 col-md-8 d-flex flex-column p-0" style="background: #f8f9fa; height: 100%; min-height: 0;">
+            <!-- Chat messages area -->
+            <div class="flex-grow-1 p-4" id="messages-container" style="overflow-y: auto; min-height: 0; display: flex; flex-direction: column;">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="mb-4 message-item" style="animation: fadeIn 0.3s ease;">
+                            {% if message.role == 'user' %}
+                                <div class="d-flex justify-content-end">
+                                    <div style="max-width: 70%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 18px; word-wrap: break-word;">
+                                        <small>You</small>
+                                        <p style="margin: 8px 0 0 0; font-size: 0.95rem;">{{ message.content }}</p>
+                                        <div style="font-size: 0.75rem; opacity: 0.8;">
+                                            {{ message.created_at|date:"H:i" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="d-flex justify-content-start align-items-flex-start">
+                                    <div style="width: 36px; height: 36px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px; flex-shrink: 0;">
+                                        🤖
+                                    </div>
+                                    <div style="max-width: 70%; background: white; color: #333; padding: 12px 16px; border-radius: 18px; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                                        <small style="color: #667eea; font-weight: 600;">AI Assistant</small>
+                                        <div style="margin: 8px 0 0 0; font-size: 0.95rem; line-height: 1.5;">{{ message.content|linebreaks }}</div>
+                                        <div style="font-size: 0.75rem; color: #999; margin-top: 6px;">
+                                            {{ message.created_at|date:"H:i" }}
+                                        </div>
+                                        <div class="message-actions" style="display: flex; gap: 8px; opacity: 0; margin-top: 6px;">
+                                            <button class="btn btn-sm btn-outline-secondary copy-btn" style="padding: 2px 6px; font-size: 0.75rem;" title="Copy message">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary react-btn" style="padding: 2px 6px; font-size: 0.75rem;" title="React">
+                                                👍
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center mt-5" style="color: #999;">
+                        <h4 style="font-weight: 700; color: #667eea;">👋 Welcome to AI Assistant!</h4>
+                        <p class="mt-4" style="color: #666;">Ask me anything about:</p>
+                        <div style="display: inline-block; text-align: left;">
+                            <p style="margin: 8px 0;"><i class="fas fa-calendar" style="color: #667eea;"></i> Exam schedules and dates</p>
+                            <p style="margin: 8px 0;"><i class="fas fa-book" style="color: #764ba2;"></i> Study and preparation tips</p>
+                            <p style="margin: 8px 0;"><i class="fas fa-chart-bar" style="color: #667eea;"></i> Your academic performance</p>
+                            <p style="margin: 8px 0;"><i class="fas fa-check-circle" style="color: #764ba2;"></i> Attendance tracking</p>
+                            <p style="margin: 8px 0;"><i class="fas fa-question-circle" style="color: #667eea;"></i> How to use the system</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Message input area -->
+            <div style="background: white; border-top: 2px solid #e0e0e0; padding: 16px;">
+                <form id="message-form" style="display: flex; gap: 8px;">
+                    {% csrf_token %}
+                    <input type="text" 
+                           id="message-input"
+                           class="form-control" 
+                           placeholder="Type your message..." 
+                           autocomplete="off"
+                           style="border-radius: 25px; border: 1px solid #e0e0e0; padding: 10px 16px;">
+                    <button class="btn" type="submit" id="send-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: none;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+                <div style="margin-top: 8px; font-size: 0.75rem; color: #999;">
+                    💡 Tip: Ask me any question and I'll help you!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-item:hover .message-actions {
+        opacity: 1 !important;
+        transition: opacity 0.2s ease;
+    }
+
+    .copy-btn, .react-btn {
+        cursor: pointer;
+    }
+
+    .copy-btn:hover, .react-btn:hover {
+        background-color: #f0f0f0 !important;
+    }
+
+    #send-btn {
+        transition: all 0.2s ease;
+    }
+
+    #send-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    #send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .list-group-item.active {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        border-color: white !important;
+        color: white !important;
+    }
+
+    .list-group-item.active:hover {
+        background-color: rgba(255, 255, 255, 0.35) !important;
+    }
+
+    /* Scrollbar styling */
+    #messages-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #messages-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    #messages-container::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 3px;
+    }
+
+    #messages-container::-webkit-scrollbar-thumb:hover {
+        background: #764ba2;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('message-form');
+    const input = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const messagesContainer = document.getElementById('messages-container');
+    const sessionId = "{{ session.id }}";
+
+    function scrollToBottom() {
+        // Multiple aggressive methods to ensure scroll works
+        const scroll = () => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+        
+        // Immediate scroll
+        scroll();
+        
+        // RAF scroll
+        requestAnimationFrame(scroll);
+        
+        // Delayed scroll
+        setTimeout(scroll, 10);
+        setTimeout(scroll, 50);
+        setTimeout(scroll, 100);
+    }
+    
+    // Auto-scroll when page loads
+    window.addEventListener('load', scrollToBottom);
+    setTimeout(scrollToBottom, 100);
+    
+    // Watch for changes to automatically scroll
+    const observer = new MutationObserver(() => {
+        scrollToBottom();
+    });
+    
+    observer.observe(messagesContainer, {
+        childList: true,
+        subtree: true,
+        characterData: false
+    });
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const message = input.value.trim();
+        if (!message) return;
+
+        sendBtn.disabled = true;
+        
+        const userDiv = document.createElement('div');
+        userDiv.className = 'mb-4 message-item';
+        userDiv.style.animation = 'fadeIn 0.3s ease';
+        userDiv.innerHTML = `
+            <div class="d-flex justify-content-end">
+                <div style="max-width: 70%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 18px; word-wrap: break-word;">
+                    <small>You</small>
+                    <p style="margin: 8px 0 0 0; font-size: 0.95rem;">${escapeHtml(message)}</p>
+                    <div style="font-size: 0.75rem; opacity: 0.8;">Just now</div>
+                </div>
+            </div>
+        `;
+        messagesContainer.appendChild(userDiv);
+        input.value = '';
+
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'mb-4 message-item';
+        loadingDiv.innerHTML = `
+            <div class="d-flex justify-content-start align-items-flex-start">
+                <div style="width: 36px; height: 36px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; flex-shrink: 0;">
+                    🤖
+                </div>
+                <div style="background: white; color: #333; padding: 12px 16px; border-radius: 18px; border: 1px solid #e0e0e0;">
+                    <small style="color: #667eea; font-weight: 600;">AI Assistant</small>
+                    <div style="margin: 8px 0 0 0; font-size: 0.95rem;">Thinking... ⏳</div>
+                </div>
+            </div>
+        `;
+        messagesContainer.appendChild(loadingDiv);
+
+        fetch("{% url 'ai_assistant:send_message' session.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingDiv.remove();
+            if (data.success) {
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'mb-4 message-item';
+                aiDiv.style.animation = 'fadeIn 0.3s ease';
+                aiDiv.innerHTML = `
+                    <div class="d-flex justify-content-start align-items-flex-start">
+                        <div style="width: 36px; height: 36px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; flex-shrink: 0;">
+                            🤖
+                        </div>
+                        <div style="max-width: 70%; background: white; color: #333; padding: 12px 16px; border-radius: 18px; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <small style="color: #667eea; font-weight: 600;">AI Assistant</small>
+                            <div style="margin: 8px 0 0 0; font-size: 0.95rem; line-height: 1.5;">${data.ai_response.replace(/\n/g, '<br>')}</div>
+                            <div style="font-size: 0.75rem; color: #999; margin-top: 6px;">Just now</div>
+                            <div class="message-actions" style="display: flex; gap: 8px; opacity: 0; margin-top: 6px;">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" style="padding: 2px 6px; font-size: 0.75rem;" title="Copy message">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary react-btn" style="padding: 2px 6px; font-size: 0.75rem;" title="React">
+                                    👍
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                messagesContainer.appendChild(aiDiv);
+                
+                // Extra scroll after response
+                setTimeout(scrollToBottom, 50);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingDiv.remove();
+            alert('Error sending message');
+        })
+        .finally(() => {
+            sendBtn.disabled = false;
+            input.focus();
+        });
+    });
+
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    input.focus();
+});
+</script>
+{% endblock %}

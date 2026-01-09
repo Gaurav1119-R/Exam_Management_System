@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat History - AI Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Chat History</h2>
+                <a href="{% url 'ai_assistant:new_chat' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Chat
+                </a>
+            </div>
+
+            {% if sessions %}
+                <div class="list-group">
+                    {% for session in sessions %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="{% url 'ai_assistant:chat' session.id %}" class="h5 mb-0">
+                                        {{ session.title }}
+                                    </a>
+                                    <div class="text-muted small">
+                                        <i class="far fa-calendar"></i> {{ session.created_at|date:"M d, Y H:i" }}
+                                        <i class="far fa-message ml-3"></i> {{ session.messages.count }} messages
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="{% url 'ai_assistant:chat' session.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-arrow-right"></i> Open
+                                    </a>
+                                    <form method="post" action="{% url 'ai_assistant:delete_session' session.id %}" style="display: inline;" 
+                                          onsubmit="return confirm('Are you sure you want to delete this chat?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger ml-2">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">No chats yet!</h4>
+                    <p>You haven't started any conversations with the AI Assistant yet. 
+                    <a href="{% url 'ai_assistant:new_chat' %}" class="alert-link">Start a new chat</a> to get started.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

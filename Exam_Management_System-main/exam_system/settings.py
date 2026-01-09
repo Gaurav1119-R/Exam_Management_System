@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.exams',
     'apps.attendance',
     'apps.reports',
+    'apps.ai_assistant',
 ]
 
 MIDDLEWARE = [
